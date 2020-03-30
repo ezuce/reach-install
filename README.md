@@ -1,2 +1,2 @@
-# reach-installer
+# reach-install
 Reach installation scripts
