@@ -1,0 +1,142 @@
+version: "3.7"
+
+## fqdn of the container is created by container_name.network_name or network_alias.network_name
+## example kamailio4.reach-mono_1_reach3
+
+services:
+  freeswitch:
+    image: ${DKH_REPO}/freeswitch:${TAG}
+    container_name: ${CONTAINER_NAME_PREFIX}freeswitch
+    networks:
+      1_reach3:
+        aliases:
+          - freeswitch
+    environment:
+      - NETWORK=reach3
+#      - NAME=freeswitch.reach3
+      - NODE=freeswitch@freeswitch.reach3${NETWORK_NAME_SUFFIX}
+      - REACH_NODE=reach@reach.reach3${NETWORK_NAME_SUFFIX}
+      - REACH_HOST=http://reach.reach3${NETWORK_NAME_SUFFIX}:8937
+#    logging:
+#      driver: none
+
+  reach:
+    image: ${DKH_REPO}/reach:${TAG}
+    container_name: ${CONTAINER_NAME_PREFIX}reach
+#    entrypoint: /bin/bash
+    networks:
+      1_reach3:
+        aliases:
+          - reach
+    volumes:
+      - db-reach:/home/user/reach/db-mnesia
+    environment:
+      - NETWORK=reach3${NETWORK_NAME_SUFFIX}
+      - REACH_NODE=reach@reach.reach3${NETWORK_NAME_SUFFIX}
+#      - NAME=reach.reach3
+      - NODE=reach@reach.reach3
+      - FSNODE=freeswitch@freeswitch.reach3${NETWORK_NAME_SUFFIX}
+      - KAMNODE=kamailio@kamailio.reach3${NETWORK_NAME_SUFFIX}
+
+  kamailio:
+    image: ${DKH_REPO}/kamailio:5.3
+    container_name: ${CONTAINER_NAME_PREFIX}kamailio
+#    entrypoint: /bin/bash
+    ports:
+      - 5060:5060/udp
+      - 5060:5060/tcp
+    networks:
+      0_sip_ext:
+        aliases:
+          - kamailio
+      1_reach3:
+        aliases:
+          - kamailio
+    environment:
+      - NETWORK=reach3
+      - REACH_NODE=reach@reach.reach3${NETWORK_NAME_SUFFIX}
+      - NAME=kamailio.reach3${NETWORK_NAME_SUFFIX}
+      - EXT_IP=${EXT_IP}
+      - NODE=kamailio@kamailio.reach3${NETWORK_NAME_SUFFIX}
+
+  timescale:
+    image: ${DKH_REPO}/timescale:${TAG}
+    container_name: ${CONTAINER_NAME_PREFIX}timescale
+#    entrypoint: /bin/bash
+    networks:
+      1_reach3:
+        aliases:
+          - timescale
+    environment:
+      - NETWORK=reach3
+#      - NAME=timescale.reach3
+      - PASSWORD=reachpass
+    volumes:
+      - db-timescale:/var/lib/postgresql/data
+
+  frontend:
+    image: ${DKH_REPO}/frontend:${TAG}
+    container_name: ${CONTAINER_NAME_PREFIX}frontend
+#    entrypoint: /bin/bash
+    networks:
+      1_reach3:
+        aliases:
+          - frontend
+    environment:
+      - NETWORK=reach3
+      - DOMAIN=${DOMAIN}
+#      - NAME=reach-ui.reach3
+      - REACH_WS
+
+  ingress:
+    image: ${DKH_REPO}/ingress:${TAG}
+    container_name: ${CONTAINER_NAME_PREFIX}ingress
+#    entrypoint: /bin/sh
+    ports:
+      - 80:80
+      - 443:443
+      - 8080:8080
+    networks:
+      1_reach3:
+        aliases:
+          - ingress
+    environment:
+      - NETWORK=reach3${NETWORK_NAME_SUFFIX}
+      - DOMAIN=${DOMAIN}
+      - HTTPS_OPTION=${HTTPS_OPTION}
+      - LE_EMAIL=${LE_EMAIL}
+#      - NAME=ingress.reach3
+    volumes:
+#      - ${PWD}/traefik/etc:/etc/traefik
+      - ${PWD}/traefik/cert:/cert
+
+  rr:
+    image: ${DKH_REPO}/rr:${TAG}
+    container_name: ${CONTAINER_NAME_PREFIX}rr
+    #    entrypoint: /bin/bash
+    networks:
+      1_reach3:
+        aliases:
+          - rr
+    environment:
+      - NODE=rr@rr.reach3
+#      - NAME=rr.reach3
+    volumes:
+      - db-rr:/home/user/rr/data
+
+networks:
+  1_reach3:
+    driver: bridge
+    name: reach3${NETWORK_NAME_SUFFIX}
+  0_sip_ext:
+    driver: bridge
+    name: ext${NETWORK_NAME_SUFFIX}
+
+volumes:
+  db-timescale:
+    name: db-timescale.reach3${NETWORK_NAME_SUFFIX}
+  db-reach:
+    name: db-reach.reach3${NETWORK_NAME_SUFFIX}
+  db-rr:
+    name: db-rr.reach3${NETWORK_NAME_SUFFIX}
+
