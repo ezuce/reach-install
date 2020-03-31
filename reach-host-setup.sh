@@ -41,7 +41,6 @@ id -u ezuce >/dev/null 2>&1 || useradd --home-dir /home/ezuce -g docker ezuce
 
 # get installation scripts
 cd /home/ezuce
-git clone 
 git clone -b master --depth 1 https://github.com/ezuce/reach-install.git 2> /dev/null
 chown ezuce:ezuce -R /home/ezuce
 
