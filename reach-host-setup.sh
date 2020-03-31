@@ -2,19 +2,32 @@
 
 # terminal colors
 FG_GREEN_BOLD="$(tput setaf 2)$(tput bold)"
-FG_GREY="$(tput sgr0)"
-FG_RED_BOLD="$(tput setaf 1)$(tput bold)"
 FG_BOLD="$(tput bold)"
 DEFAULT="$(tput sgr0)"
 
-yum -y update
-
 # install and run docker
-yum -y install yum-utils device-mapper-persistent-data lvm2 git ngrep tcpdump net-tools sudo
-yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
-yum -y install docker-ce
-systemctl start docker
-systemctl enable docker
+if which yum > /dev/null 2>&1; then
+{
+    yum -y update
+    yum -y install yum-utils device-mapper-persistent-data lvm2 git ngrep tcpdump net-tools sudo
+    yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+    yum -y install docker-ce
+    systemctl start docker
+    systemctl enable docker
+}
+elif which apt-get > /dev/null 2>&1; then
+{
+    apt-get remove docker docker-engine docker.io containerd runc
+    apt-get -y update
+    apt-get install apt-transport-https ca-certificates curl gnupg2 software-properties-common git ngrep tcpdump net-tools sudo
+    curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
+    add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable"
+    apt-get -y update
+    apg-get -y install docker-ce docker-ce-cli containerd.io
+
+    systemctl start docker
+}
+fi
 
 # install docker-compose
 curl -L "https://github.com/docker/compose/releases/download/1.25.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
