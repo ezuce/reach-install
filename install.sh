@@ -12,7 +12,7 @@ DEFAULT="$(tput sgr0)"
 
 YEAR="$(date +'%Y')"
 FQDN=$(hostname -f)
-IFCONFIG_IP="$(curl -4 -s ifconfig.co)"
+PUBLIC_IP="$(curl -4 -s ifconfig.co)"
 VERSION="20.04"
 
 ###############################################################################
@@ -61,7 +61,7 @@ print_missing_dependency()
 	printf "\t${FG_BOLD}$1${DEFAULT}: not found\n"
 	printf "\n${FG_GREY} Please, execute following commands as root, then run installation again:${DEFAULT}\n"
 	printf "${FG_BOLD}\n"
-	printf "  curl https://raw.githubusercontent.com/swarmcom/deploy/master/rhel-host-setup.sh > host-setup.sh\n"
+	printf "  curl https://raw.githubusercontent.com/ezuce/reach-install/master/reach-host-setup.sh > reach-host-setup.sh\n"
 	printf "  chmod +x host-setup.sh\n"
 	printf "  ./host-setup.sh\n"
 	printf "${DEFAULT}\n\n"
@@ -80,8 +80,8 @@ EOF
 query_for_ext_ip()
 {
 	cat <<-EOF
-	Enter Reachme ${FG_BOLD}External IP Address${DEFAULT} or press <Enter>
-	if autodetected value ${FG_GREEN_BOLD}[${IFCONFIG_IP}]${DEFAULT} is correct
+	Enter Reachme ${FG_BOLD}Public IP Address${DEFAULT} or press <Enter>
+	if autodetected value ${FG_GREEN_BOLD}[${PUBLIC_IP}]${DEFAULT} is correct
 EOF
 }
 
@@ -207,7 +207,7 @@ printf "_______________________________________________________________\n\n"
 if test -z "${EXT_IP}" || test "${FORCE_INSTALL}" = 1; then
 	query_for_ext_ip
 	read -p "> " EXT_IP
-	EXT_IP=${EXT_IP:-${IFCONFIG_IP}}
+	EXT_IP=${EXT_IP:-${PUBLIC_IP}}
 fi
 
 # print settings confirmed at this point
