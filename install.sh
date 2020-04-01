@@ -1,5 +1,8 @@
 #!/bin/bash -e
 
+export DKH_REPO=${DKH_REPO:-"reach3"}
+export TAG=${TAG:-"latest"}
+
 # terminal colors
 FG_GREEN_BOLD="$(tput setaf 2)$(tput bold)"
 FG_GREY="$(tput sgr0)"
@@ -245,7 +248,7 @@ cat <<-EOF >.env
 EOF
 
 # move to actual installation ...
-printf "${FG_BOLD}Going to install and start Reachme services ...${DEFAULT}\n\n"
+printf "${FG_BOLD}Going to pull and start Reachme services ...${DEFAULT}\n\n"
 
 # start app with docker-compose
 docker-compose pull && docker-compose up --no-build -d
