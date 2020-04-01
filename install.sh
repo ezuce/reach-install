@@ -212,7 +212,7 @@ fi
 
 # print settings confirmed at this point
 restore_cursor
-printf "\tExternal IP: ${FG_GREEN_BOLD}${EXT_IP}${DEFAULT}\n"
+printf "\tPublic IP: ${FG_GREEN_BOLD}${EXT_IP}${DEFAULT}\n"
 save_cursor
 printf "_______________________________________________________________\n\n"
 
