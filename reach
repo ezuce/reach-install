@@ -128,6 +128,15 @@ EOF
 	done
 }
 
+clean_iptables_rules()
+{
+   # clean nat table
+   sudo iptables-save -t nat | grep "dport 10000:12000" | sed "s|-A|sudo iptables -t nat -D|g" | bash
+
+   # clean filter table
+   sudo iptables-save -t filter | grep "dport 10000:12000" | sed "s|-A|sudo iptables -t filter -D|g" | bash
+}
+
 parse_cli_arguments()
 {
 	while [[ "$#" -gt 0 ]]; do
@@ -139,6 +148,14 @@ parse_cli_arguments()
 			print_help
 			exit 1
 			;;
+		install)
+         reach_install
+         exit 1
+         ;;
+		stop)
+         reach_stop
+         exit 1
+         ;;
 		--arg_1=*)
 			arg_1="${1#*=}"
 			;;
@@ -163,96 +180,125 @@ print_help()
 # Main script logic
 ###############################################################################
 
-clear && printf '\e[3J'
+reach_stop()
+{
+	clear && printf '\e[3J'
 
-print_header
-save_cursor
+	print_header
+	save_cursor
+
+	clean_iptables_rules
+	docker-compose down
+}
+
+reach_install()
+{
+	clear && printf '\e[3J'
+
+	print_header
+	save_cursor
+
+	# load env variables stored in .env file
+	if test -e ./.env; then
+		source ./.env
+	fi
+
+	# check if we have docker installed
+	if ! which docker > /dev/null 2>&1; then
+	{
+		print_missing_dependency docker
+		exit 1
+	}
+	fi
+
+	# check if we have docker-compose installed
+	if ! which docker-compose > /dev/null 2>&1; then
+	{
+		print_missing_dependency docker-compose
+		exit 1
+	}
+	fi
+
+	# check if we have FQDN set, if not query for it
+	if test -z "${DOMAIN}" || test "${FORCE_INSTALL}" = 1; then
+		query_for_fqdn
+	fi
+
+	# print settings confirmed at this point
+	restore_cursor
+	printf "${FG_BOLD} Your settings:${DEFAULT}\n\n"
+	printf "\tDomain: ${FG_GREEN_BOLD}${DOMAIN}${DEFAULT}\n"
+	save_cursor
+	printf "_______________________________________________________________\n\n"
+	
+	# check if we have external IP set, if not query for it
+	if test -z "${EXT_IP}" || test "${FORCE_INSTALL}" = 1; then
+		query_for_ext_ip
+		read -p "> " EXT_IP
+		EXT_IP=${EXT_IP:-${PUBLIC_IP}}
+	fi
+
+	# print settings confirmed at this point
+	restore_cursor
+	printf "\tPublic IP: ${FG_GREEN_BOLD}${EXT_IP}${DEFAULT}\n"
+	save_cursor
+	printf "_______________________________________________________________\n\n"
+	
+	# check if we have HTTPS option set, if not query for it
+	if test -z "${HTTPS_OPTION}" || test "${FORCE_INSTALL}" = 1; then
+		query_for_https_option
+	fi
+	
+	# print settings confirmed at this point
+	restore_cursor
+	printf "\tHTTPS: ${FG_GREEN_BOLD}${HTTPS_OPTION_STRING}${DEFAULT}\n"
+	if [[ ! -z ${LE_EMAIL} ]]
+	then
+		printf "\tLet's Encrypt email: ${FG_GREEN_BOLD}${LE_EMAIL}${DEFAULT}\n"
+	fi
+	save_cursor
+	printf "_______________________________________________________________\n\n"
+	
+	# create/renew .env file
+	cat <<-EOF >.env
+		COMPOSE_PROJECT_NAME=reach
+		
+		PROJECT_BRANCH=
+		CONTAINER_NAME_PREFIX=
+		NETWORK_NAME_SUFFIX=
+		
+		DOMAIN=${DOMAIN}
+		EXT_IP=${EXT_IP}
+		HTTPS_OPTION=${HTTPS_OPTION}
+		HTTPS_OPTION_STRING="${HTTPS_OPTION_STRING}"
+		LE_EMAIL=${LE_EMAIL}
+		CERT_NAME=${CERT_NAME}
+	EOF
+	
+	# move to actual installation ...
+	printf "${FG_BOLD}Going to pull and start Reachme services ...${DEFAULT}\n\n"
+	
+	# start app with docker-compose
+	docker-compose pull && docker-compose up --no-build -d
+	
+	# add iptable rules for RTP media (Freeswitch container)	
+	FREESWITCH_IP=$(docker inspect \
+   	 --format "{{ (index .NetworkSettings.Networks \"reach3${NETWORK_NAME_SUFFIX}\").IPAddress }}" \
+    	${CONTAINER_NAME_PREFIX}freeswitch)
+
+	FREESWITCH_DOCKER_INTERFACE=$(ip route get ${FREESWITCH_IP} | grep -oP '(?<=dev )[^ ]*')
+
+	# nat table, DOCKER chain
+	sudo iptables -t nat -A DOCKER ! -i ${FREESWITCH_DOCKER_INTERFACE} -p udp -m udp --dport 10000:12000 -j DNAT --to-destination ${FREESWITCH_IP}
+
+	# nat table, POSTROUTING chain
+	sudo iptables -t nat -A POSTROUTING -s ${FREESWITCH_IP}/32 -d ${FREESWITCH_IP}/32 -p udp -m udp --dport 10000:12000 -j MASQUERADE
+
+	# filter table, DOCKER chain
+	sudo iptables -t filter -A DOCKER -d ${FREESWITCH_IP}/32 ! -i ${FREESWITCH_DOCKER_INTERFACE} -o ${FREESWITCH_DOCKER_INTERFACE} -p udp -m udp --dport 10000:12000 -j ACCEPT
+	
+	# ... all done
+	printf "\n${FG_BOLD}... done${DEFAULT}\n\n"
+}
 
 parse_cli_arguments $@
-
-# load env variables stored in .env file
-if test -e ./.env; then
-	source ./.env
-fi
-
-# check if we have docker installed
-if ! which docker > /dev/null 2>&1; then
-{
-	print_missing_dependency docker
-	exit 1
-}
-fi
-
-# check if we have docker-compose installed
-if ! which docker-compose > /dev/null 2>&1; then
-{
-	print_missing_dependency docker-compose
-	exit 1
-}
-fi
-
-# check if we have FQDN set, if not query for it
-if test -z "${DOMAIN}" || test "${FORCE_INSTALL}" = 1; then
-	query_for_fqdn
-fi
-
-# print settings confirmed at this point
-restore_cursor
-printf "${FG_BOLD} Your settings:${DEFAULT}\n\n"
-printf "\tDomain: ${FG_GREEN_BOLD}${DOMAIN}${DEFAULT}\n"
-save_cursor
-printf "_______________________________________________________________\n\n"
-
-# check if we have external IP set, if not query for it
-if test -z "${EXT_IP}" || test "${FORCE_INSTALL}" = 1; then
-	query_for_ext_ip
-	read -p "> " EXT_IP
-	EXT_IP=${EXT_IP:-${PUBLIC_IP}}
-fi
-
-# print settings confirmed at this point
-restore_cursor
-printf "\tPublic IP: ${FG_GREEN_BOLD}${EXT_IP}${DEFAULT}\n"
-save_cursor
-printf "_______________________________________________________________\n\n"
-
-# check if we have HTTPS option set, if not query for it
-if test -z "${HTTPS_OPTION}" || test "${FORCE_INSTALL}" = 1; then
-	query_for_https_option
-fi
-
-# print settings confirmed at this point
-restore_cursor
-printf "\tHTTPS: ${FG_GREEN_BOLD}${HTTPS_OPTION_STRING}${DEFAULT}\n"
-if [[ ! -z ${LE_EMAIL} ]]
-then
-	printf "\tLet's Encrypt email: ${FG_GREEN_BOLD}${LE_EMAIL}${DEFAULT}\n"
-fi
-save_cursor
-printf "_______________________________________________________________\n\n"
-
-# create/renew .env file
-cat <<-EOF >.env
-	COMPOSE_PROJECT_NAME=reach
-
-	PROJECT_BRANCH=
-	CONTAINER_NAME_PREFIX=
-	NETWORK_NAME_SUFFIX=
-
-	DOMAIN=${DOMAIN}
-	EXT_IP=${EXT_IP}
-	HTTPS_OPTION=${HTTPS_OPTION}
-	HTTPS_OPTION_STRING="${HTTPS_OPTION_STRING}"
-	LE_EMAIL=${LE_EMAIL}
-	CERT_NAME=${CERT_NAME}
-EOF
-
-# move to actual installation ...
-printf "${FG_BOLD}Going to pull and start Reachme services ...${DEFAULT}\n\n"
-
-# start app with docker-compose
-docker-compose pull && docker-compose up --no-build -d
-
-# ... all done
-printf "\n${FG_BOLD}... done${DEFAULT}\n\n"
-
