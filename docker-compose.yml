@@ -33,13 +33,13 @@ services:
     environment:
       - NETWORK=reach3${NETWORK_NAME_SUFFIX}
       - REACH_NODE=reach@reach.reach3${NETWORK_NAME_SUFFIX}
-#      - NAME=reach.reach3
-      - NODE=reach@reach.reach3
+      - DOMAIN=${DOMAIN}
+      - NODE=reach@reach.reach3${NETWORK_NAME_SUFFIX}
       - FSNODE=freeswitch@freeswitch.reach3${NETWORK_NAME_SUFFIX}
       - KAMNODE=kamailio@kamailio.reach3${NETWORK_NAME_SUFFIX}
 
   kamailio:
-    image: ${DKH_REPO}/kamailio:5.3
+    image: ${DKH_REPO}/kamailio:${TAG}
     container_name: ${CONTAINER_NAME_PREFIX}kamailio
 #    entrypoint: /bin/bash
     ports:
