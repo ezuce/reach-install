@@ -47,7 +47,7 @@ print_header()
 {
 	printf "_______________________________________________________________\n" && printf "${FG_GREEN_BOLD}"
 	printf "                                                               \n"
-	printf "  Ezuce | Reachme                                              \n"
+	printf "  Ezuce | Reach                                                \n"
 	printf "                                                               \n" && printf "${DEFAULT}"
 	printf "  Contact Center Solution                                      \n"
 	printf "_______________________________________________________________\n" && printf "${DEFAULT}${FG_GREY}"
@@ -61,16 +61,16 @@ print_missing_dependency()
 	printf "\t${FG_BOLD}$1${DEFAULT}: not found\n"
 	printf "\n${FG_GREY} Please, execute following commands as root, then run installation again:${DEFAULT}\n"
 	printf "${FG_BOLD}\n"
-	printf "  curl https://raw.githubusercontent.com/ezuce/reach-install/master/reach-host-setup.sh > reach-host-setup.sh\n"
-	printf "  chmod +x host-setup.sh\n"
-	printf "  ./host-setup.sh\n"
+	printf "  curl https://raw.githubusercontent.com/ezuce/reach-install/master/reach-host-setup.sh > reach-host-setup\n"
+	printf "  chmod +x reach-host-setup\n"
+	printf "  ./reach-host-setup\n"
 	printf "${DEFAULT}\n\n"
 }
 
 query_for_fqdn()
 {
 	cat <<-EOF
-	Enter Reachme ${FG_BOLD}Fully Qualified Domain Name${DEFAULT} or press <Enter>
+	Enter Reach ${FG_BOLD}Fully Qualified Domain Name${DEFAULT} or press <Enter>
 	if autodetected value ${FG_GREEN_BOLD}[${FQDN}]${DEFAULT} is correct
 EOF
 	read -p "> " DOMAIN
@@ -80,7 +80,7 @@ EOF
 query_for_ext_ip()
 {
 	cat <<-EOF
-	Enter Reachme ${FG_BOLD}Public IP Address${DEFAULT} or press <Enter>
+	Enter Reach ${FG_BOLD}Public IP Address${DEFAULT} or press <Enter>
 	if autodetected value ${FG_GREEN_BOLD}[${PUBLIC_IP}]${DEFAULT} is correct
 EOF
 }
@@ -177,27 +177,17 @@ print_help()
 }
 
 ###############################################################################
-# Main script logic
+# Main script actions
 ###############################################################################
 
 reach_stop()
 {
-	clear && printf '\e[3J'
-
-	print_header
-	save_cursor
-
 	clean_iptables_rules
 	docker-compose down
 }
 
 reach_install()
 {
-	clear && printf '\e[3J'
-
-	print_header
-	save_cursor
-
 	# load env variables stored in .env file
 	if test -e ./.env; then
 		source ./.env
@@ -276,7 +266,7 @@ reach_install()
 	EOF
 	
 	# move to actual installation ...
-	printf "${FG_BOLD}Going to pull and start Reachme services ...${DEFAULT}\n\n"
+	printf "${FG_BOLD}Going to pull and start Reach services ...${DEFAULT}\n\n"
 	
 	# start app with docker-compose
 	docker-compose pull && docker-compose up --no-build -d
@@ -300,5 +290,14 @@ reach_install()
 	# ... all done
 	printf "\n${FG_BOLD}... done${DEFAULT}\n\n"
 }
+
+###############################################################################
+# Script entry point
+###############################################################################
+
+clear && printf '\e[3J'
+
+print_header
+save_cursor
 
 parse_cli_arguments $@
