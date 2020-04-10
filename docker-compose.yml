@@ -107,8 +107,7 @@ services:
       - LE_EMAIL=${LE_EMAIL}
 #      - NAME=ingress.reach3
     volumes:
-#      - ${PWD}/traefik/etc:/etc/traefik
-      - ${PWD}/traefik/cert:/cert
+      - ${PWD}/cert:/cert
 
   rr:
     image: ${DKH_REPO}/rr:${TAG}
