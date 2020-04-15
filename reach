@@ -139,6 +139,11 @@ clean_iptables_rules()
 
 parse_cli_arguments()
 {
+	if [[ "$#" -eq 0 ]]	then
+		print_help
+		exit 1
+	fi
+
 	while [[ "$#" -gt 0 ]]; do
 	case "$1" in
 		-f|--force)
@@ -149,13 +154,13 @@ parse_cli_arguments()
 			exit 1
 			;;
 		install)
-         reach_install
-         exit 1
-         ;;
+			reach_install
+			exit 1
+			;;
 		stop)
-         reach_stop
-         exit 1
-         ;;
+			reach_stop
+			exit 1
+			;;
 		--arg_1=*)
 			arg_1="${1#*=}"
 			;;
