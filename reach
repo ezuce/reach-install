@@ -12,7 +12,7 @@ DEFAULT="$(tput sgr0)"
 
 YEAR="$(date +'%Y')"
 FQDN=$(hostname -f)
-PUBLIC_IP="$(curl -4 -s ifconfig.co)"
+PUBLIC_IP="$(dig +short myip.opendns.com @resolver1.opendns.com)"
 VERSION="20.04"
 
 ###############################################################################
