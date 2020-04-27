@@ -9,7 +9,7 @@ DEFAULT="$(tput sgr0)"
 if which yum > /dev/null 2>&1; then
 {
     yum -y update
-    yum -y install yum-utils device-mapper-persistent-data lvm2 ngrep tcpdump net-tools sudo
+    yum -y install yum-utils device-mapper-persistent-data lvm2 ngrep tcpdump net-tools sudo bind-utils
     yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
     yum -y install docker-ce
     systemctl start docker
@@ -19,7 +19,7 @@ elif which apt-get > /dev/null 2>&1; then
 {
     apt-get remove docker docker-engine docker.io
     apt-get -y update
-    apt-get install apt-transport-https ca-certificates curl gnupg2 software-properties-common ngrep tcpdump net-tools sudo
+    apt-get install apt-transport-https ca-certificates curl gnupg2 software-properties-common ngrep tcpdump net-tools sudo dnsutils
     curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
     add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable"
     apt-get -y update
