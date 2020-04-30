@@ -7,13 +7,13 @@ services:
   freeswitch:
     image: ${DKH_REPO}/freeswitch:${TAG}
     container_name: ${CONTAINER_NAME_PREFIX}freeswitch
+    restart: always
     networks:
       1_reach3:
         aliases:
           - freeswitch
     environment:
       - NETWORK=reach3
-#      - NAME=freeswitch.reach3
       - NODE=freeswitch@freeswitch.reach3${NETWORK_NAME_SUFFIX}
       - REACH_NODE=reach@reach.reach3${NETWORK_NAME_SUFFIX}
       - REACH_HOST=http://reach.reach3${NETWORK_NAME_SUFFIX}:8937
@@ -23,7 +23,7 @@ services:
   reach:
     image: ${DKH_REPO}/reach:${TAG}
     container_name: ${CONTAINER_NAME_PREFIX}reach
-#    entrypoint: /bin/bash
+    restart: always
     networks:
       1_reach3:
         aliases:
@@ -41,7 +41,7 @@ services:
   kamailio:
     image: ${DKH_REPO}/kamailio:${TAG}
     container_name: ${CONTAINER_NAME_PREFIX}kamailio
-#    entrypoint: /bin/bash
+    restart: always
     ports:
       - 5060:5060/udp
       - 5060:5060/tcp
@@ -62,14 +62,13 @@ services:
   timescale:
     image: ${DKH_REPO}/timescale:${TAG}
     container_name: ${CONTAINER_NAME_PREFIX}timescale
-#    entrypoint: /bin/bash
+    restart: always
     networks:
       1_reach3:
         aliases:
           - timescale
     environment:
       - NETWORK=reach3
-#      - NAME=timescale.reach3
       - PASSWORD=reachpass
     volumes:
       - db-timescale:/var/lib/postgresql/data
@@ -77,7 +76,7 @@ services:
   frontend:
     image: ${DKH_REPO}/frontend:${TAG}
     container_name: ${CONTAINER_NAME_PREFIX}frontend
-#    entrypoint: /bin/bash
+    restart: always
     networks:
       1_reach3:
         aliases:
@@ -85,13 +84,12 @@ services:
     environment:
       - NETWORK=reach3
       - DOMAIN=${DOMAIN}
-#      - NAME=reach-ui.reach3
       - REACH_WS
 
   ingress:
     image: ${DKH_REPO}/ingress:${TAG}
     container_name: ${CONTAINER_NAME_PREFIX}ingress
-#    entrypoint: /bin/sh
+    restart: always
     ports:
       - 80:80
       - 443:443
@@ -105,21 +103,19 @@ services:
       - DOMAIN=${DOMAIN}
       - HTTPS_OPTION=${HTTPS_OPTION}
       - LE_EMAIL=${LE_EMAIL}
-#      - NAME=ingress.reach3
     volumes:
       - ${PWD}/cert:/cert
 
   rr:
     image: ${DKH_REPO}/rr:${TAG}
     container_name: ${CONTAINER_NAME_PREFIX}rr
-    #    entrypoint: /bin/bash
+    restart: always
     networks:
       1_reach3:
         aliases:
           - rr
     environment:
       - NODE=rr@rr.reach3
-#      - NAME=rr.reach3
     volumes:
       - db-rr:/home/user/rr/data
 
