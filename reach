@@ -146,20 +146,42 @@ parse_cli_arguments()
 
 	while [[ "$#" -gt 0 ]]; do
 	case "$1" in
-		-f|--force)
-			FORCE_INSTALL=1
-			;;
-		-h|--help)
+		help)
 			print_help
 			exit 1
 			;;
 		install)
-			reach_install
+			shift
+			reach_install $@
 			exit 1
 			;;
 		stop)
 			reach_stop
 			exit 1
+			;;
+		logs)
+			shift
+			reach_logs $@
+			exit 1
+			;;
+		--arg_1=*)
+			arg_1="${1#*=}"
+			;;
+		*)
+			printf "${FG_RED_BOLD}Error:${DEFAULT} Invalid command line argument ${FG_BOLD}$1${DEFAULT}\n\n\n"
+			print_help
+			exit 1
+	esac
+	# shift
+	done
+}
+
+parse_install_arguments()
+{
+	while [[ "$#" -gt 0 ]]; do
+	case "$1" in
+		-f|--force)
+			FORCE_INSTALL=1
 			;;
 		--arg_1=*)
 			arg_1="${1#*=}"
@@ -191,8 +213,15 @@ reach_stop()
 	docker-compose down
 }
 
+reach_logs()
+{
+	docker-compose logs $@
+}
+
 reach_install()
 {
+	parse_install_arguments $@
+
 	# load env variables stored in .env file
 	if test -e ./.env; then
 		source ./.env
