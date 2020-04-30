@@ -1,8 +1,5 @@
 version: "3.7"
 
-## fqdn of the container is created by container_name.network_name or network_alias.network_name
-## example kamailio4.reach-mono_1_reach3
-
 services:
   freeswitch:
     image: ${DKH_REPO}/freeswitch:${TAG}
