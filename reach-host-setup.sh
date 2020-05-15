@@ -45,7 +45,7 @@ chmod +x reach-install/reach
 chown ezuce -R /home/ezuce
 
 # user ezuce can quietly alter iptables to open port range for RTP media
-echo "ezuce ALL=(root) NOPASSWD:/sbin/iptables" > /etc/sudoers.d/ezuce
+echo "ezuce ALL=(root) NOPASSWD: /sbin/iptables, /sbin/iptables-save" > /etc/sudoers.d/ezuce
 
 cat <<-EOF
 	${FG_BOLD}To continue, login as user ${FG_GREEN_BOLD}ezuce${DEFAULT}${FG_BOLD} [ su - ezuce ] ...${DEFAULT}
