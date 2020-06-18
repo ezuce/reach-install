@@ -13,6 +13,7 @@ DEFAULT="$(tput sgr0)"
 YEAR="$(date +'%Y')"
 FQDN=$(hostname -f)
 PUBLIC_IP="$(dig +short myip.opendns.com @resolver1.opendns.com)"
+REACH_IP="$(ip route get 8.8.8.8 | grep -oP '(?<=src ).*' | awk '{print $1}')"
 VERSION="20.04"
 
 ###############################################################################
@@ -80,8 +81,16 @@ EOF
 query_for_ext_ip()
 {
 	cat <<-EOF
-	Enter Reach ${FG_BOLD}Public IP Address${DEFAULT} or press <Enter>
+	Enter Reach ${FG_BOLD}Public (Advertised) IP Address${DEFAULT} or press <Enter>
 	if autodetected value ${FG_GREEN_BOLD}[${PUBLIC_IP}]${DEFAULT} is correct
+EOF
+}
+
+query_for_host_ip()
+{
+	cat <<-EOF
+	Enter Reach ${FG_BOLD}Host IP Address${DEFAULT} or press <Enter>
+	if autodetected value ${FG_GREEN_BOLD}[${REACH_IP}]${DEFAULT} is correct
 EOF
 }
 
@@ -268,6 +277,19 @@ reach_install()
 	save_cursor
 	printf "_______________________________________________________________\n\n"
 	
+	# check if we have host IP set, if not query for it
+	if test -z "${HOST_IP}" || test "${FORCE_INSTALL}" = 1; then
+		query_for_host_ip
+		read -p "> " HOST_IP
+		HOST_IP=${HOST_IP:-${REACH_IP}}
+	fi
+
+	# print settings confirmed at this point
+	restore_cursor
+	printf "\tHost IP: ${FG_GREEN_BOLD}${HOST_IP}${DEFAULT}\n"
+	save_cursor
+	printf "_______________________________________________________________\n\n"
+
 	# check if we have HTTPS option set, if not query for it
 	if test -z "${HTTPS_OPTION}" || test "${FORCE_INSTALL}" = 1; then
 		query_for_https_option
@@ -286,13 +308,14 @@ reach_install()
 	# create/renew .env file
 	cat <<-EOF >.env
 		COMPOSE_PROJECT_NAME=reach
-		
+	
 		PROJECT_BRANCH=
 		CONTAINER_NAME_PREFIX=
 		NETWORK_NAME_SUFFIX=
-		
+	
 		DOMAIN=${DOMAIN}
 		EXT_IP=${EXT_IP}
+		HOST_IP=${HOST_IP}
 		HTTPS_OPTION=${HTTPS_OPTION}
 		HTTPS_OPTION_STRING="${HTTPS_OPTION_STRING}"
 		LE_EMAIL=${LE_EMAIL}

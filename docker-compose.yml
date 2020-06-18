@@ -54,6 +54,7 @@ services:
       - REACH_NODE=reach@reach.reach3${NETWORK_NAME_SUFFIX}
       - NAME=kamailio.reach3${NETWORK_NAME_SUFFIX}
       - EXT_IP=${EXT_IP}
+      - HOST_IP=${HOST_IP}
       - NODE=kamailio@kamailio.reach3${NETWORK_NAME_SUFFIX}
 
   timescale:
@@ -131,4 +132,3 @@ volumes:
     name: db-reach.reach3${NETWORK_NAME_SUFFIX}
   db-rr:
     name: db-rr.reach3${NETWORK_NAME_SUFFIX}
-
