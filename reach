@@ -99,9 +99,9 @@ query_for_https_option()
 	cat <<-EOF
 	${FG_BOLD}HTTPS configuration${DEFAULT}, please select one of the options below:
 
-	    1. unencrypted HTTP ${FG_GREEN_BOLD}[default]${DEFAULT}
-	    2. HTTPS with Let's Encrypt certificate
-	    3. HTTPS with my own certificate
+		1. unencrypted HTTP ${FG_GREEN_BOLD}[default]${DEFAULT}
+		2. HTTPS with Let's Encrypt certificate
+		3. HTTPS with my own certificate
 
 EOF
 
@@ -139,11 +139,11 @@ EOF
 
 clean_iptables_rules()
 {
-   # clean nat table
-   sudo iptables-save -t nat | grep "dport 10000:12000" | sed "s|-A|sudo iptables -t nat -D|g" | bash
+	# clean nat table
+	sudo iptables-save -t nat | grep "dport 10000:12000" | sed "s|-A|sudo iptables -t nat -D|g" | bash
 
-   # clean filter table
-   sudo iptables-save -t filter | grep "dport 10000:12000" | sed "s|-A|sudo iptables -t filter -D|g" | bash
+	# clean filter table
+	sudo iptables-save -t filter | grep "dport 10000:12000" | sed "s|-A|sudo iptables -t filter -D|g" | bash
 }
 
 parse_cli_arguments()
@@ -204,6 +204,27 @@ parse_install_arguments()
 	done
 }
 
+export_logs()
+{
+	rm -rf ./reach_logs
+	mkdir ./reach_logs
+	for service in reach kamailio freeswitch frontend rr timescale ingress
+	do
+		docker logs -t $@ ${service} > reach_logs/${service}.log 2>&1
+		if test $? != 0; then
+			printf "Incorrect docker logs parameters. Exiting.\n"
+			rm -rf ./reach_logs
+			exit 1
+		fi
+	done
+
+	printf "Exporting logs ... "
+	TIMESTAMP="$(date +'%Y-%m-%dT%H-%M-%S%Z')"
+	tar -czf reach_${DOMAIN}_${TIMESTAMP}.tar.gz reach_logs
+	printf "done.\n"
+	rm -rf ./reach_logs
+}
+
 print_help()
 {
 	printf "Options:\n"
@@ -224,17 +245,31 @@ reach_stop()
 
 reach_logs()
 {
-	docker-compose logs $@
+	if [[ "$#" -gt 0 ]]; then
+		while [[ "$#" -gt 0 ]]; do
+			case "$1" in
+				-e|--export)
+					shift
+					export_logs $@
+					exit 0
+					;;
+				-*|--*)
+					printf "${FG_RED_BOLD}Error:${DEFAULT} Invalid command line argument ${FG_RED_BOLD}$1${DEFAULT}\n\n\n"
+					exit 1
+					;;
+				*)
+					docker-compose logs --tail 1 -t -f $@
+					shift
+			esac
+		done
+	else
+		docker-compose logs --tail 1 -t -f
+	fi
 }
 
 reach_install()
 {
 	parse_install_arguments $@
-
-	# load env variables stored in .env file
-	if test -e ./.env; then
-		source ./.env
-	fi
 
 	# check if we have docker installed
 	if ! which docker > /dev/null 2>&1; then
@@ -356,5 +391,10 @@ clear && printf '\e[3J'
 
 print_header
 save_cursor
+
+# load env variables stored in .env file
+if test -e ./.env; then
+	source ./.env
+fi
 
 parse_cli_arguments $@
