@@ -210,8 +210,7 @@ export_logs()
 	mkdir ./reach_logs
 	for service in reach kamailio freeswitch frontend rr timescale ingress
 	do
-		docker logs -t $@ ${service} > reach_logs/${service}.log 2>&1
-		if test $? != 0; then
+		if ! docker logs -t $@ ${service} > reach_logs/${service}.log 2>&1; then
 			printf "Incorrect docker logs parameters. Exiting.\n"
 			rm -rf ./reach_logs
 			exit 1
