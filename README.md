@@ -28,7 +28,7 @@ cd /home/ezuce/reach-install
 ```
 and follow instructions on the screen.
 
-The installer will ask you in first two steps to enter FQDN and public IP address of your Reach box. It will try to guess these values, just press Enter if autodetected values are correct. Third step is to choose between HTTP and HTTPS installation. If you choose HTTPS, you have two options: use automatic installation using free [Let's Encrypt](https://letsencrypt.org/) certificate or using your own certificate for given domain. In the latter case, you need to place your certiface files in `/home/ezuce/reach-install/cert` folder.
+The installer will ask you in first two steps to enter FQDN and public IP address of your Reach box. It will try to guess these values, just press Enter if autodetected values are correct. Third step is to choose between HTTP and HTTPS installation. If you choose HTTPS, you have two options: use automatic installation using free [Let's Encrypt](https://letsencrypt.org/) certificate or using your own certificate for given domain. In the latter case, you need to place your certificate files in `/home/ezuce/reach-install/cert` folder.
 
 ## Stop Reach
 
