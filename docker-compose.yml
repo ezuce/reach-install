@@ -14,8 +14,8 @@ services:
       - NODE=freeswitch@freeswitch.reach3${NETWORK_NAME_SUFFIX}
       - REACH_NODE=reach@reach.reach3${NETWORK_NAME_SUFFIX}
       - REACH_HOST=http://reach.reach3${NETWORK_NAME_SUFFIX}:8937
-#    logging:
-#      driver: none
+    logging:
+      driver: "journald"
 
   reach:
     image: ${DKH_REPO}/reach:${TAG}
@@ -34,6 +34,8 @@ services:
       - NODE=reach@reach.reach3${NETWORK_NAME_SUFFIX}
       - FSNODE=freeswitch@freeswitch.reach3${NETWORK_NAME_SUFFIX}
       - KAMNODE=kamailio@kamailio.reach3${NETWORK_NAME_SUFFIX}
+    logging:
+      driver: "journald"
 
   kamailio:
     image: ${DKH_REPO}/kamailio:${TAG}
@@ -56,6 +58,8 @@ services:
       - EXT_IP=${EXT_IP}
       - HOST_IP=${HOST_IP}
       - NODE=kamailio@kamailio.reach3${NETWORK_NAME_SUFFIX}
+    logging:
+      driver: "journald"
 
   timescale:
     image: ${DKH_REPO}/timescale:${TAG}
@@ -70,6 +74,8 @@ services:
       - PASSWORD=reachpass
     volumes:
       - db-timescale:/var/lib/postgresql/data
+    logging:
+      driver: "journald"
 
   frontend:
     image: ${DKH_REPO}/frontend:${TAG}
@@ -83,6 +89,8 @@ services:
       - NETWORK=reach3
       - DOMAIN=${DOMAIN}
       - REACH_WS
+    logging:
+      driver: "journald"
 
   ingress:
     image: ${DKH_REPO}/ingress:${TAG}
@@ -103,6 +111,8 @@ services:
       - LE_EMAIL=${LE_EMAIL}
     volumes:
       - ${PWD}/cert:/cert
+    logging:
+      driver: "journald"
 
   rr:
     image: ${DKH_REPO}/rr:${TAG}
@@ -116,6 +126,8 @@ services:
       - NODE=rr@rr.reach3
     volumes:
       - db-rr:/home/user/rr/data
+    logging:
+      driver: "journald"
 
 networks:
   1_reach3:
