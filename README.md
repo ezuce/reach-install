@@ -64,3 +64,14 @@ Again, if no service is explicitly specified, logs for all of them will be expor
 
 
 reach_**your_fqdn**_**timestamp**.tar.gz
+
+Examples:
+
+to obtain logs from freeswitch and kamailio services from last 2 hours, use:
+```sh
+./reach logs -e --since 2h freeswitch kamailio
+```
+to obtain logs from all services from last day, use:
+```sh
+./reach logs -e --since 24h
+```
