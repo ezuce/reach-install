@@ -133,9 +133,17 @@ networks:
   1_reach3:
     driver: bridge
     name: reach3${NETWORK_NAME_SUFFIX}
+    ipam:
+      driver: default
+      config:
+        - subnet: ${BRIDGE_REACH3_SUBNET}
   0_sip_ext:
     driver: bridge
     name: ext${NETWORK_NAME_SUFFIX}
+    ipam:
+      driver: default
+      config:
+        - subnet: ${BRIDGE_EXT_SUBNET}
 
 volumes:
   db-timescale:

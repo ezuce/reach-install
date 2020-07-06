@@ -14,6 +14,8 @@ YEAR="$(date +'%Y')"
 FQDN=$(hostname -f)
 PUBLIC_IP="$(dig +short myip.opendns.com @resolver1.opendns.com)"
 REACH_IP="$(ip route get 8.8.8.8 | grep -oP '(?<=src ).*' | awk '{print $1}')"
+REACH3_SUBNET="172.20.0.6/16"
+EXT_SUBNET="172.21.0.6/16"
 VERSION="20.04"
 
 ###############################################################################
@@ -91,6 +93,22 @@ query_for_host_ip()
 	cat <<-EOF
 	Enter Reach ${FG_BOLD}Host IP Address${DEFAULT} or press <Enter>
 	if autodetected value ${FG_GREEN_BOLD}[${REACH_IP}]${DEFAULT} is correct
+EOF
+}
+
+query_for_reach3_subnet()
+{
+	cat <<-EOF
+	Enter subnet IP range for ${FG_BOLD}reach3${DEFAULT} bridge network or press <Enter>
+	if preset value ${FG_GREEN_BOLD}[${REACH3_SUBNET}]${DEFAULT} is correct
+EOF
+}
+
+query_for_ext_subnet()
+{
+	cat <<-EOF
+	Enter subnet IP range for ${FG_BOLD}ext${DEFAULT} bridge network or press <Enter>
+	if preset value ${FG_GREEN_BOLD}[${EXT_SUBNET}]${DEFAULT} is correct
 EOF
 }
 
@@ -191,6 +209,9 @@ parse_install_arguments()
 	case "$1" in
 		-f|--force)
 			FORCE_INSTALL=1
+			;;
+		-a|--advanced)
+			ADVANCED_INSTALL=1
 			;;
 		--arg_1=*)
 			arg_1="${1#*=}"
@@ -328,6 +349,34 @@ reach_install()
 	if test -z "${HTTPS_OPTION}" || test "${FORCE_INSTALL}" = 1; then
 		query_for_https_option
 	fi
+
+	test "${ADVANCED_INSTALL}" = 1; then
+		# print settings confirmed at this point
+		restore_cursor
+		printf "\tBridge network subnet - reach3: ${FG_GREEN_BOLD}${BRIDGE_REACH3_SUBNET}${DEFAULT}\n"
+		save_cursor
+		printf "_______________________________________________________________\n\n"
+
+		# check if we have BRIDGE_REACH3_SUBNET option set, if not query for it
+		if test -z "${BRIDGE_REACH3_SUBNET}" || test "${FORCE_INSTALL}" = 1; then
+			query_for_reach3_subnet
+			read -p "> " BRIDGE_REACH3_SUBNET
+			BRIDGE_REACH3_SUBNET=${BRIDGE_REACH3_SUBNET:-${REACH3_SUBNET}}
+		fi
+
+		# print settings confirmed at this point
+		restore_cursor
+		printf "\tBridge network subnet - ext: ${FG_GREEN_BOLD}${BRIDGE_EXT_SUBNET}${DEFAULT}\n"
+		save_cursor
+		printf "_______________________________________________________________\n\n"
+
+		# check if we have BRIDGE_EXT_SUBNET option set, if not query for it
+		if test -z "${BRIDGE_EXT_SUBNET}" || test "${FORCE_INSTALL}" = 1; then
+			query_for_ext_subnet
+			read -p "> " BRIDGE_EXT_SUBNET
+			BRIDGE_EXT_SUBNET=${BRIDGE_EXT_SUBNET:-${EXT_SUBNET}}
+		fi
+	fi
 	
 	# print settings confirmed at this point
 	restore_cursor
@@ -350,6 +399,8 @@ reach_install()
 		DOMAIN=${DOMAIN}
 		EXT_IP=${EXT_IP}
 		HOST_IP=${HOST_IP}
+		BRIDGE_REACH3_SUBNET=${BRIDGE_REACH3_SUBNET}
+		BRIDGE_EXT_SUBNET=${BRIDGE_EXT_SUBNET}
 		HTTPS_OPTION=${HTTPS_OPTION}
 		HTTPS_OPTION_STRING="${HTTPS_OPTION_STRING}"
 		LE_EMAIL=${LE_EMAIL}
