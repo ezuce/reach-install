@@ -350,7 +350,7 @@ reach_install()
 		query_for_https_option
 	fi
 
-	test "${ADVANCED_INSTALL}" = 1; then
+	if test "${ADVANCED_INSTALL}" = 1; then
 		# print settings confirmed at this point
 		restore_cursor
 		printf "\tBridge network subnet - reach3: ${FG_GREEN_BOLD}${BRIDGE_REACH3_SUBNET}${DEFAULT}\n"
