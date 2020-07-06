@@ -250,6 +250,7 @@ print_help()
 	printf "Options:\n"
 	printf "\t-h, --help\tprints this help information\n"
 	printf "\t-f, --force\tforce reinstall\n"
+	printf "\t-a, --advanced\tadvanced installation options\n"
 	printf "\n\n"
 }
 
@@ -291,6 +292,7 @@ reach_install()
 {
 	parse_install_arguments $@
 
+	############################################################################
 	# check if we have docker installed
 	if ! which docker > /dev/null 2>&1; then
 	{
@@ -299,6 +301,7 @@ reach_install()
 	}
 	fi
 
+	############################################################################
 	# check if we have docker-compose installed
 	if ! which docker-compose > /dev/null 2>&1; then
 	{
@@ -307,11 +310,11 @@ reach_install()
 	}
 	fi
 
+	############################################################################
 	# check if we have FQDN set, if not query for it
 	if test -z "${DOMAIN}" || test "${FORCE_INSTALL}" = 1; then
 		query_for_fqdn
 	fi
-
 	# print settings confirmed at this point
 	restore_cursor
 	printf "${FG_BOLD} Your settings:${DEFAULT}\n\n"
@@ -319,65 +322,64 @@ reach_install()
 	save_cursor
 	printf "_______________________________________________________________\n\n"
 	
+	############################################################################
 	# check if we have external IP set, if not query for it
 	if test -z "${EXT_IP}" || test "${FORCE_INSTALL}" = 1; then
 		query_for_ext_ip
 		read -p "> " EXT_IP
 		EXT_IP=${EXT_IP:-${PUBLIC_IP}}
 	fi
-
 	# print settings confirmed at this point
 	restore_cursor
 	printf "\tPublic IP: ${FG_GREEN_BOLD}${EXT_IP}${DEFAULT}\n"
 	save_cursor
 	printf "_______________________________________________________________\n\n"
 	
+	############################################################################
 	# check if we have host IP set, if not query for it
 	if test -z "${HOST_IP}" || test "${FORCE_INSTALL}" = 1; then
 		query_for_host_ip
 		read -p "> " HOST_IP
 		HOST_IP=${HOST_IP:-${REACH_IP}}
 	fi
-
 	# print settings confirmed at this point
 	restore_cursor
 	printf "\tHost IP: ${FG_GREEN_BOLD}${HOST_IP}${DEFAULT}\n"
 	save_cursor
 	printf "_______________________________________________________________\n\n"
 
-	# check if we have HTTPS option set, if not query for it
-	if test -z "${HTTPS_OPTION}" || test "${FORCE_INSTALL}" = 1; then
-		query_for_https_option
-	fi
-
+	############################################################################
+	# check if we have BRIDGE_REACH3_SUBNET and BRIDGE_EXT_SUBNET options set,
+	# if not query for them
 	if test "${ADVANCED_INSTALL}" = 1; then
+		if test -z "${BRIDGE_REACH3_SUBNET}" || test "${FORCE_INSTALL}" = 1; then
+			query_for_reach3_subnet
+			read -p "> " BRIDGE_REACH3_SUBNET
+			BRIDGE_REACH3_SUBNET=${BRIDGE_REACH3_SUBNET:-${REACH3_SUBNET}}
+		fi
 		# print settings confirmed at this point
 		restore_cursor
 		printf "\tBridge network subnet - reach3: ${FG_GREEN_BOLD}${BRIDGE_REACH3_SUBNET}${DEFAULT}\n"
 		save_cursor
 		printf "_______________________________________________________________\n\n"
 
-		# check if we have BRIDGE_REACH3_SUBNET option set, if not query for it
-		if test -z "${BRIDGE_REACH3_SUBNET}" || test "${FORCE_INSTALL}" = 1; then
-			query_for_reach3_subnet
-			read -p "> " BRIDGE_REACH3_SUBNET
-			BRIDGE_REACH3_SUBNET=${BRIDGE_REACH3_SUBNET:-${REACH3_SUBNET}}
-		fi
-
-		# print settings confirmed at this point
-		restore_cursor
-		printf "\tBridge network subnet - ext: ${FG_GREEN_BOLD}${BRIDGE_EXT_SUBNET}${DEFAULT}\n"
-		save_cursor
-		printf "_______________________________________________________________\n\n"
-
-		# check if we have BRIDGE_EXT_SUBNET option set, if not query for it
 		if test -z "${BRIDGE_EXT_SUBNET}" || test "${FORCE_INSTALL}" = 1; then
 			query_for_ext_subnet
 			read -p "> " BRIDGE_EXT_SUBNET
 			BRIDGE_EXT_SUBNET=${BRIDGE_EXT_SUBNET:-${EXT_SUBNET}}
 		fi
+		# print settings confirmed at this point
+		restore_cursor
+		printf "\tBridge network subnet - ext: ${FG_GREEN_BOLD}${BRIDGE_EXT_SUBNET}${DEFAULT}\n"
+		save_cursor
+		printf "_______________________________________________________________\n\n"
 	fi
-	
+
+	############################################################################
+	# check if we have HTTPS option set, if not query for it
+	if test -z "${HTTPS_OPTION}" || test "${FORCE_INSTALL}" = 1; then
+		query_for_https_option
+	fi
 	# print settings confirmed at this point
 	restore_cursor
 	printf "\tHTTPS: ${FG_GREEN_BOLD}${HTTPS_OPTION_STRING}${DEFAULT}\n"
@@ -399,8 +401,8 @@ reach_install()
 		DOMAIN=${DOMAIN}
 		EXT_IP=${EXT_IP}
 		HOST_IP=${HOST_IP}
-		BRIDGE_REACH3_SUBNET=${BRIDGE_REACH3_SUBNET}
-		BRIDGE_EXT_SUBNET=${BRIDGE_EXT_SUBNET}
+		BRIDGE_REACH3_SUBNET=${BRIDGE_REACH3_SUBNET:-${REACH3_SUBNET}}
+		BRIDGE_EXT_SUBNET=${BRIDGE_EXT_SUBNET:-${EXT_SUBNET}}
 		HTTPS_OPTION=${HTTPS_OPTION}
 		HTTPS_OPTION_STRING="${HTTPS_OPTION_STRING}"
 		LE_EMAIL=${LE_EMAIL}
