@@ -16,7 +16,7 @@ PUBLIC_IP="$(dig +short myip.opendns.com @resolver1.opendns.com)"
 REACH_IP="$(ip route get 8.8.8.8 | grep -oP '(?<=src ).*' | awk '{print $1}')"
 REACH3_SUBNET="172.20.0.0/16"
 EXT_SUBNET="172.21.0.0/16"
-VERSION="20.04"
+VERSION="20.08"
 
 ###############################################################################
 # Functions
